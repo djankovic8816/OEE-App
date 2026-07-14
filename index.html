@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>OEE Erfassung – Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<!-- Screenshot Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    padding: 20px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    background: #0d0d0f;
+    color: #e5e5e7;
+    display: flex;
+    justify-content: center;
+  }
+
+  .container {
+    width: 94%;
+    max-width: 520px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(18px);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  h2 {
+    text-align: center;
+    margin-top: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    font-size: 1.6rem;
+  }
+
+  label {
+    display: block;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    font-size: 1rem;
+    color: #cfcfd3;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+    font-size: 1.05rem;
+  }
+
+  .time {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .buttons button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 20px;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 12px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    color: #000;
+  }
+
+  button span.icon {
+    font-size: 1.4rem;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  .start { background: #34c759; }
+  .pause { background: #ff9f0a; }
+  .end   { background: #ff453a; }
+  .reset { background: #0a84ff; }
+  .oee   { background: #5ac8fa; }
+  .shot  { background: #8e8e93; }
+
+  table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  th {
+    background: rgba(255,255,255,0.08);
+  }
+
+  #summary {
+    margin-top: 28px;
+    padding: 26px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 22px;
+    display: none;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .ok {
+    color: #34c759;
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .bad {
+    color: #ff3b30;
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  /* Popup */
+  .popup-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .popup {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    width: 90%;
+    max-width: 340px;
+    color: #000;
+  }
+
+  .popup button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 20px;
+    background: #0a84ff;
+    color: #000;
+    border: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="captureArea">
+  <h2>OEE Erfassung</h2>
+
+  <!-- Standard Felder -->
+  <label>Projektname</label>
+  <input id="projekt" type="text">
+
+  <label>Datum</label>
+  <input id="datum" type="date">
+
+  <label>Ausführender</label>
+  <input id="ausf" type="text">
+
+  <label>Standort</label>
+  <input id="ort" type="text">
+
+  <label>Anzahl Stationen</label>
+  <input id="anzStationen" type="number">
+
+  <label>Maximale Laufzeit (Minuten)</label>
+  <input id="maxTime" type="number">
+
+  <h3>OEE Eingaben</h3>
+  <label>Soll-Stückzahl</label>
+  <input id="oeeSoll" type="number">
+
+  <label>Ist-Stückzahl</label>
+  <input id="oeeIst" type="number">
+
+  <label>Gutteile</label>
+  <input id="oeeGut" type="number">
+
+  <label>Ausschuss</label>
+  <input id="oeeAusschuss" type="number">
+
+  <!-- Grenzwerte jetzt hier -->
+  <h3>Grenzwerte</h3>
+
+  <label>Grenzwert Verfügbarkeit (%)</label>
+  <input id="grenzV" type="number">
+
+  <label>Grenzwert Qualität (%)</label>
+  <input id="grenzQ" type="number">
+
+  <label>Grenzwert Leistung (%)</label>
+  <input id="grenzL" type="number">
+
+  <label>Grenzwert OEE Gesamt (%)</label>
+  <input id="grenzOEE" type="number">
+
+  <div class="time" id="totalTime">Gesamtzeit: 00:00:00</div>
+  <div class="time" id="prodTime">Produktionszeit: 00:00:00</div>
+
+  <div class="buttons">
+    <button class="start" onclick="startClock()"><span class="icon">▶</span>Start</button>
+    <button class="pause" onclick="startPause()"><span class="icon">⏸</span>Unterbruch</button>
+    <button class="end" onclick="finishProcess()"><span class="icon">⏹</span>Ende</button>
+    <button class="reset" onclick="resetAll()"><span class="icon">↺</span>Reset</button>
+    <button class="oee" onclick="calculateOEE()"><span class="icon">📊</span>OEE berechnen</button>
+    <button class="shot" onclick="makeScreenshot()"><span class="icon">📸</span>Screenshot speichern</button>
+  </div>
+
+  <h3>Unterbrüche</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Station</th>
+        <th>Dauer</th>
+        <th>Bemerkung</th>
+      </tr>
+    </thead>
+    <tbody id="pauseList"></tbody>
+  </table>
+
+  <div id="summary"></div>
+</div>
+
+<!-- POPUP -->
+<div class="popup-bg" id="popupBg">
+  <div class="popup">
+    <h3>Station wählen</h3>
+
+    <label>Station</label>
+    <select id="station"></select>
+
+    <label>Bemerkung</label>
+    <input id="bemerkung" type="text">
+
+    <button onclick="finishPause()"><span class="icon">✔</span>Störung behoben</button>
+  </div>
+</div>
+
+<script>
+let msTotal=0, secTotal=0, minTotal=0;
+let msPause=0, secPause=0, minPause=0;
+let totalInterval=null;
+let pauseInterval=null;
+let clockRunning=false;
+
+function formatTime(min,sec,ms){
+  return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}:${String(ms).padStart(2,'0')}`;
+}
+
+function updateTimes(){
+  document.getElementById("totalTime").textContent =
+    "Gesamtzeit: " + formatTime(minTotal,secTotal,msTotal);
+
+  let totalMs = (minTotal*6000)+(secTotal*100)+msTotal;
+
+  let allPausesMs = 0;
+  document.querySelectorAll("#pauseList tr").forEach(row=>{
+    allPausesMs += Number(row.dataset.ms);
+  });
+
+  let prodMs = totalMs - allPausesMs;
+
+  let prodMin = Math.floor(prodMs / 6000);
+  let prodSec = Math.floor((prodMs % 6000) / 100);
+  let prodMsOnly = prodMs % 100;
+
+  document.getElementById("prodTime").textContent =
+    "Produktionszeit: " + formatTime(prodMin,prodSec,prodMsOnly);
+
+  let maxMinutes = Number(document.getElementById("maxTime").value);
+  if(minTotal >= maxMinutes && maxMinutes > 0){
+    finishProcess();
+  }
+}
+
+function startClock(){
+  if(clockRunning) return;
+  clockRunning=true;
+
+  totalInterval=setInterval(()=>{
+    msTotal++;
+    if(msTotal===100){msTotal=0;secTotal++;}
+    if(secTotal===60){secTotal=0;minTotal++;}
+    updateTimes();
+  },10);
+}
+
+function startPause(){
+  if(!clockRunning) return;
+
+  msPause=secPause=minPause=0;
+
+  pauseInterval=setInterval(()=>{
+    msPause++;
+    if(msPause===100){msPause=0;secPause++;}
+    if(secPause===60){secPause=0;minPause++;}
+    updateTimes();
+  },10);
+
+  let count = Number(document.getElementById("anzStationen").value) || 1;
+  let stationSelect = document.getElementById("station");
+  stationSelect.innerHTML = "";
+
+  for(let i=1; i<=count; i++){
+    let opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = "Station " + i;
+    stationSelect.appendChild(opt);
+  }
+
+  document.getElementById("popupBg").style.display="flex";
+}
+
+function finishPause(){
+  document.getElementById("popupBg").style.display="none";
+  clearInterval(pauseInterval);
+
+  let pauseMs = (minPause*6000)+(secPause*100)+msPause;
+
+  let row = document.createElement("tr");
+  row.dataset.ms = pauseMs;
+
+  row.innerHTML = `
+    <td>Station ${document.getElementById("station").value}</td>
+    <td>${formatTime(minPause,secPause,msPause)}</td>
+    <td>${document.getElementById("bemerkung").value}</td>
+  `;
+
+  document.getElementById("pauseList").appendChild(row);
+
+  document.getElementById("bemerkung").value = "";
+
+  msPause=secPause=minPause=0;
+  updateTimes();
+}
+
+function finishProcess(){
+  clearInterval(totalInterval);
+  clearInterval(pauseInterval);
+  clockRunning=false;
+
+  let summary = document.getElementById("summary");
+  summary.style.display="block";
+
+  let pauseRows = "";
+  document.querySelectorAll("#pauseList tr").forEach(row=>{
+    pauseRows += `
+      <li>Station ${row.children[0].innerText}: ${row.children[1].innerText} (${row.children[2].innerText})</li>
+    `;
+  });
+
+  summary.innerHTML = `
+    <h3>Zusammenfassung</h3>
+    <p><strong>Projekt:</strong> ${document.getElementById("projekt").value}</p>
+    <p><strong>Datum:</strong> ${document.getElementById("datum").value}</p>
+    <p><strong>Ausführender:</strong> ${document.getElementById("ausf").value}</p>
+    <p><strong>Standort:</strong> ${document.getElementById("ort").value}</p>
+
+    <p><strong>Gesamtzeit:</strong> ${document.getElementById("totalTime").textContent}</p>
+    <p><strong>Produktionszeit:</strong> ${document.getElementById("prodTime").textContent}</p>
+
+    <h4>Unterbrüche:</h4>
+    <ul>${pauseRows}</ul>
+
+    <h3>OEE</h3>
+    <div id="oeeResult"></div>
+  `;
+}
+
+function calculateOEE(){
+  let summary = document.getElementById("summary");
+  if(summary.style.display !== "block"){
+    finishProcess();
+  }
+
+  let oeeBox = document.getElementById("oeeResult");
+  oeeBox.innerHTML = "";
+
+  let totalMs = (minTotal*6000)+(secTotal*100)+msTotal;
+  let pauseMs = 0;
+  document.querySelectorAll("#pauseList tr").forEach(row=>{
+    pauseMs += Number(row.dataset.ms);
+  });
+  let prodMs = totalMs - pauseMs;
+
+  if(totalMs <= 0){
+    alert("Keine Zeit erfasst – bitte zuerst Lauf starten.");
+    return;
+  }
+
+  let availability = (prodMs / totalMs) * 100;
+
+  let soll = Number(document.getElementById("oeeSoll").value);
+  let ist = Number(document.getElementById("oeeIst").value);
+  let gut = Number(document.getElementById("oeeGut").value);
+  let ausschuss = Number(document.getElementById("oeeAusschuss").value);
+
+  let performance = (ist / soll) * 100;
+  let quality = (gut / (gut + ausschuss)) * 100;
+  let oee = (availability/100) * (performance/100) * (quality/100) * 100;
+
+  let gv = Number(document.getElementById("grenzV").value);
+  let gq = Number(document.getElementById("grenzQ").value);
+  let gl = Number(document.getElementById("grenzL").value);
+  let go = Number(document.getElementById("grenzOEE").value);
+
+  let okV = availability >= gv;
+  let okQ = quality >= gq;
+  let okL = performance >= gl;
+  let okO = oee >= go;
+
+  let iconV = okV ? "<div class='ok'>✔</div>" : "<div class='bad'>✘</div>";
+  let iconQ = okQ ? "<div class='ok'>✔</div>" : "<div class='bad'>✘</div>";
+  let iconL = okL ? "<div class='ok'>✔</div>" : "<div class='bad'>✘</div>";
+  let iconO = okO ? "<div class='ok'>👍</div>" : "<div class='bad'>👎</div>";
+
+  oeeBox.innerHTML = `
+    <table>
+      <tr><th>Verfügbarkeit</th><td>${availability.toFixed(1)}%</td><td>${iconV}</td></tr>
+      <tr><th>Qualität</th><td>${quality.toFixed(1)}%</td><td>${iconQ}</td></tr>
+      <tr><th>Leistung</th><td>${performance.toFixed(1)}%</td><td>${iconL}</td></tr>
+      <tr><th>OEE Gesamt</th><td>${oee.toFixed(1)}%</td><td>${iconO}</td></tr>
+    </table>
+  `;
+}
+
+function makeScreenshot(){
+  html2canvas(document.getElementById("captureArea")).then(canvas => {
+    let link = document.createElement("a");
+    link.download = "oee_screenshot.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+}
+
+function resetAll(){
+  clearInterval(totalInterval);
+  clearInterval(pauseInterval);
+  clockRunning=false;
+
+  msTotal=secTotal=minTotal=0;
+  msPause=secPause=minPause=0;
+
+  document.getElementById("pauseList").innerHTML = "";
+  document.getElementById("summary").style.display="none";
+
+  document.querySelectorAll("input").forEach(i => i.value = "");
+
+  updateTimes();
+}
+</script>
+
+</body>
+</html>
