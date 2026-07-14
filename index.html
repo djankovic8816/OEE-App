@@ -496,39 +496,34 @@ const go = 92;
 }
 
 async function makeScreenshot() {
+
     try {
 
         const canvas = await html2canvas(
             document.getElementById("captureArea"),
             {
-                scale: 2,
-                useCORS: true
+                scale: 2
             }
         );
 
         const image = canvas.toDataURL("image/png");
 
-        const win = window.open();
+        const win = window.open("");
 
-        win.document.write(`
-            <html>
-            <head>
-                <title>OEE Screenshot</title>
-            </head>
-           
-<body>
-    image}">
-</body>
+        win.document.write(
+            '<html><head><title>OEE Screenshot</title></head><body style="margin:0;background:black;text-align:center;">            image +
+            '" style="max-width:100%;height:auto;"></body></html>'
+        );
 
-            </html>
-        `);
+        win.document.close();
 
     } catch (e) {
+
         alert("Fehler beim Erstellen des Screenshots");
         console.log(e);
+
     }
 }
-
 function resetAll(){
   clearInterval(totalInterval);
   clearInterval(pauseInterval);
