@@ -200,20 +200,7 @@
   <label>Ausschuss</label>
   <input id="oeeAusschuss" type="number">
 
-  <!-- Grenzwerte jetzt hier -->
-  <h3>Grenzwerte</h3>
 
-  <label>Grenzwert Verfügbarkeit (%)</label>
-  <input id="grenzV" type="number">
-
-  <label>Grenzwert Qualität (%)</label>
-  <input id="grenzQ" type="number">
-
-  <label>Grenzwert Leistung (%)</label>
-  <input id="grenzL" type="number">
-
-  <label>Grenzwert OEE Gesamt (%)</label>
-  <input id="grenzOEE" type="number">
 
   <div class="time" id="totalTime">Gesamtzeit: 00:00:00</div>
   <div class="time" id="prodTime">Produktionszeit: 00:00:00</div>
@@ -289,9 +276,17 @@ function updateTimes(){
     "Produktionszeit: " + formatTime(prodMin,prodSec,prodMsOnly);
 
   let maxMinutes = Number(document.getElementById("maxTime").value);
-  if(minTotal >= maxMinutes && maxMinutes > 0){
+ if(minTotal >= maxMinutes && maxMinutes > 0){
+
     finishProcess();
-  }
+
+    setTimeout(() => {
+
+        askForOEEValues();
+
+    }, 500);
+
+}
 }
 
 function startClock(){
@@ -388,6 +383,39 @@ function finishProcess(){
   `;
 }
 
+function askForOEEValues() {
+
+  let ist = document.getElementById("oeeIst");
+
+  if (!ist.value) {
+    let value = prompt("Ist-Stückzahl eingeben");
+    if (value !== null) {
+      ist.value = value;
+    }
+  }
+
+  let gut = document.getElementById("oeeGut");
+
+  if (!gut.value) {
+    let value = prompt("Gutteile eingeben");
+    if (value !== null) {
+      gut.value = value;
+    }
+  }
+
+  let ausschuss = document.getElementById("oeeAusschuss");
+
+  if (!ausschuss.value) {
+    let value = prompt("Ausschuss eingeben");
+    if (value !== null) {
+      ausschuss.value = value;
+    }
+  }
+
+  calculateOEE();
+
+}
+
 function calculateOEE(){
   let summary = document.getElementById("summary");
   if(summary.style.display !== "block"){
@@ -416,14 +444,22 @@ function calculateOEE(){
   let gut = Number(document.getElementById("oeeGut").value);
   let ausschuss = Number(document.getElementById("oeeAusschuss").value);
 
-  let performance = (ist / soll) * 100;
-  let quality = (gut / (gut + ausschuss)) * 100;
+  let performance = soll > 0
+    ? (ist / soll) * 100
+    : 0;
+
+let quality = (gut + ausschuss) > 0
+    ? (gut / (gut + ausschuss)) * 100
+    : 0;
   let oee = (availability/100) * (performance/100) * (quality/100) * 100;
 
-  let gv = Number(document.getElementById("grenzV").value);
-  let gq = Number(document.getElementById("grenzQ").value);
-  let gl = Number(document.getElementById("grenzL").value);
-  let go = Number(document.getElementById("grenzOEE").value);
+ 
+const gv = 93;
+const gq = 99;
+const gl = 99;
+const go = 92;
+`
+
 
   let okV = availability >= gv;
   let okQ = quality >= gq;
@@ -446,50 +482,35 @@ function calculateOEE(){
 }
 
 async function makeScreenshot() {
-
-  const canvas = await html2canvas(
-    document.getElementById("captureArea"),
-    {
-      scale: 2,
-      useCORS: true
-    }
-  );
-
-  canvas.toBlob(async (blob) => {
-
-    const file = new File(
-      [blob],
-      "OEE_Report.png",
-      { type: "image/png" }
-    );
-
     try {
 
-      if (
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
+        const canvas = await html2canvas(
+            document.getElementById("captureArea"),
+            {
+                scale: 2,
+                useCORS: true
+            }
+        );
 
-        await navigator.share({
-          title: "OEE Report",
-          text: "OEE-Auswertung",
-          files: [file]
-        });
+        const image = canvas.toDataURL("image/png");
 
-      } else {
+        const win = window.open();
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "OEE_Report.png";
-        link.click();
+        win.document.write(`
+            <html>
+            <head>
+                <title>OEE Screenshot</title>
+            </head>
+            <body style="margin:0">
+                ${image}
+            </body>
+            </html>
+        `);
 
-      }
-
-    } catch (err) {
-      console.log(err);
+    } catch (e) {
+        alert("Fehler beim Erstellen des Screenshots");
+        console.log(e);
     }
-
-  }, "image/png");
 }
 
 function resetAll(){
