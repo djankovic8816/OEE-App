@@ -47,21 +47,15 @@
     color: #cfcfd3;
   }
 
- 
-input,
-select {
-  width: calc(100% - 30px);
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.08);
-  color: #ffffff;
-  font-size: 1.05rem;
-  display: block;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
+  input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+    font-size: 1.05rem;
+  }
 
   .time {
     font-size: 1.5rem;
@@ -167,14 +161,6 @@ select {
     font-size: 1.2rem;
     margin-top: 16px;
   }
- 
-#station {
-  font-size: 1.3rem;
-  padding: 18px;
- 
-
- 
- 
 </style>
 </head>
 <body>
@@ -472,7 +458,7 @@ const gv = 93;
 const gq = 99;
 const gl = 99;
 const go = 92;
-
+`
 
 
   let okV = availability >= gv;
@@ -496,34 +482,37 @@ const go = 92;
 }
 
 async function makeScreenshot() {
-
     try {
 
         const canvas = await html2canvas(
             document.getElementById("captureArea"),
             {
-                scale: 2
+                scale: 2,
+                useCORS: true
             }
         );
 
         const image = canvas.toDataURL("image/png");
 
-        const win = window.open("");
+        const win = window.open();
 
-        win.document.write(
-            '<html><head><title>OEE Screenshot</title></head><body style="margin:0;background:black;text-align:center;">            image +
-            '" style="max-width:100%;height:auto;"></body></html>'
-        );
-
-        win.document.close();
+        win.document.write(`
+            <html>
+            <head>
+                <title>OEE Screenshot</title>
+            </head>
+            <body style="margin:0">
+                ${image}
+            </body>
+            </html>
+        `);
 
     } catch (e) {
-
         alert("Fehler beim Erstellen des Screenshots");
         console.log(e);
-
     }
 }
+
 function resetAll(){
   clearInterval(totalInterval);
   clearInterval(pauseInterval);
